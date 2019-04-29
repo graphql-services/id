@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"github.com/99designs/gqlgen/handler"
 	"github.com/graphql-services/id"
 	"github.com/graphql-services/id/database"
+	"github.com/graphql-services/memberships"
 )
 
 const defaultPort = "80"
@@ -28,14 +30,23 @@ func main() {
 	defer db.Close()
 	db.AutoMigrate(&id.UserActivationRequest{}, &id.ForgotPasswordRequest{})
 
-	http.Handle("/", handler.Playground("GraphQL playground", "/graphql"))
-	http.Handle("/graphql", handler.GraphQL(id.NewExecutableSchema(id.Config{Resolvers: &id.Resolver{}})))
+	gqlHandler := handler.GraphQL(id.NewExecutableSchema(id.Config{Resolvers: &id.Resolver{}}))
+	playgroundHandler := handler.Playground("GraphQL playground", "/graphql")
+	http.HandleFunc("/graphql", func(res http.ResponseWriter, req *http.Request) {
+		if req.Method == "GET" {
+			playgroundHandler(res, req)
+			return
+		}
+		ctx := context.WithValue(req.Context(), memberships.DBContextKey, db)
+		req = req.WithContext(ctx)
+		gqlHandler(res, req)
+	})
 
 	http.HandleFunc("/healthcheck", func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(200)
 		res.Write([]byte("OK"))
 	})
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	log.Printf("connect to http://localhost:%s/graphql for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
