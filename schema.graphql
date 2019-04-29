@@ -1,0 +1,74 @@
+scalar Time
+
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+enum UserGender {
+  male
+  female
+}
+
+type User {
+  id: ID!
+  email: String!
+  given_name: String
+  family_name: String
+  middle_name: String
+  nickname: String
+  preferred_username: String
+  profile: String
+  picture: String
+  website: String
+  gender: UserGender
+  birthdate: Time
+  zoneinfo: String
+  locale: String
+  phone_number: String
+  phone_number_verified: String
+  address: String
+}
+
+type Query {
+  user(id: ID!): User
+}
+
+input UserInfo {
+  given_name: String
+  family_name: String
+  middle_name: String
+  nickname: String
+  preferred_username: String
+  profile: String
+  picture: String
+  website: String
+  gender: UserGender
+  birthdate: Time
+  zoneinfo: String
+  locale: String
+  phone_number: String
+  phone_number_verified: String
+  address: String
+}
+
+type UserActivationRequest {
+  id: ID!
+  userID: ID!
+  expireAt: Time
+}
+type ForgotPasswordRequest {
+  id: ID!
+  expireAt: Time
+}
+
+type Mutation {
+  inviteUser(email: String!): User!
+  forgotPassword(email: String!): ForgotPasswordRequest!
+  registerUser(email: String!, password: String!, info: UserInfo!): User!
+
+  activateUser(userActivationRequestID: ID!): Boolean!
+  updateUser(info: UserInfo!): User!
+  resetPassword(forgotPasswordRequestID: ID!, newPassword: String!): Boolean!
+  updatePassword(oldPassword: String!, newPassword: String!): Boolean!
+}
