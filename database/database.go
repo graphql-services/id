@@ -43,8 +43,8 @@ func NewDBWithString(urlString string) *DB {
 	return NewDB(db)
 }
 
-// Query ...
-func (db *DB) Query() *gorm.DB {
+// Client ...
+func (db *DB) Client() *gorm.DB {
 	return db.db
 }
 

@@ -2,9 +2,15 @@ package id
 
 import (
 	"context"
+
+	"github.com/badoux/checkmail"
+	"github.com/graphql-services/id/database"
+	uuid "github.com/satori/go.uuid"
 ) // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
 
-type Resolver struct{}
+type Resolver struct {
+	DB *database.DB
+}
 
 func (r *Resolver) Mutation() MutationResolver {
 	return &mutationResolver{r}
@@ -15,9 +21,28 @@ func (r *Resolver) Query() QueryResolver {
 
 type mutationResolver struct{ *Resolver }
 
-func (r *mutationResolver) InviteUser(ctx context.Context, email string) (user *User, err error) {
-	u, err := InviteUser(ctx, email)
-	user = &u
+func (r *mutationResolver) InviteUser(ctx context.Context, email string) (u *User, err error) {
+	err = checkmail.ValidateFormat(email)
+	if err != nil {
+		return
+	}
+
+	u = &User{}
+	// TODO: search user by account emails, not just primary user email
+	res := r.DB.Client().First(u, "email = ?", email)
+	err = res.Error
+	if err != nil && !res.RecordNotFound() {
+		return
+	}
+
+	if res.RecordNotFound() {
+		u = &User{
+			ID:    uuid.Must(uuid.NewV4()).String(),
+			Email: email,
+		}
+		err = r.DB.Client().Save(u).Error
+	}
+
 	return
 }
 func (r *mutationResolver) ForgotPassword(ctx context.Context, email string) (*ForgotPasswordRequest, error) {

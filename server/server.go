@@ -28,9 +28,9 @@ func main() {
 
 	db := database.NewDBWithString(urlString)
 	defer db.Close()
-	db.AutoMigrate(&id.UserActivationRequest{}, &id.ForgotPasswordRequest{})
+	db.AutoMigrate(&id.User{}, &id.UserActivationRequest{}, &id.ForgotPasswordRequest{})
 
-	gqlHandler := handler.GraphQL(id.NewExecutableSchema(id.Config{Resolvers: &id.Resolver{}}))
+	gqlHandler := handler.GraphQL(id.NewExecutableSchema(id.Config{Resolvers: &id.Resolver{DB: db}}))
 	playgroundHandler := handler.Playground("GraphQL playground", "/graphql")
 	http.HandleFunc("/graphql", func(res http.ResponseWriter, req *http.Request) {
 		if req.Method == "GET" {
