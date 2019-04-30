@@ -2,6 +2,7 @@ package id
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/badoux/checkmail"
 	"github.com/graphql-services/id/database"
@@ -24,6 +25,7 @@ type mutationResolver struct{ *Resolver }
 func (r *mutationResolver) InviteUser(ctx context.Context, email string) (u *User, err error) {
 	err = checkmail.ValidateFormat(email)
 	if err != nil {
+		err = fmt.Errorf("invalid email format")
 		return
 	}
 
