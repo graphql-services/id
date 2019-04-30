@@ -64,6 +64,7 @@ type ComplexityRoot struct {
 	User struct {
 		Address             func(childComplexity int) int
 		Birthdate           func(childComplexity int) int
+		CreatedAt           func(childComplexity int) int
 		Email               func(childComplexity int) int
 		FamilyName          func(childComplexity int) int
 		Gender              func(childComplexity int) int
@@ -77,6 +78,7 @@ type ComplexityRoot struct {
 		Picture             func(childComplexity int) int
 		PreferredUsername   func(childComplexity int) int
 		Profile             func(childComplexity int) int
+		UpdatedAt           func(childComplexity int) int
 		Website             func(childComplexity int) int
 		Zoneinfo            func(childComplexity int) int
 	}
@@ -240,6 +242,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Birthdate(childComplexity), true
 
+	case "User.CreatedAt":
+		if e.complexity.User.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.User.CreatedAt(childComplexity), true
+
 	case "User.Email":
 		if e.complexity.User.Email == nil {
 			break
@@ -330,6 +339,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Profile(childComplexity), true
+
+	case "User.UpdatedAt":
+		if e.complexity.User.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.User.UpdatedAt(childComplexity), true
 
 	case "User.Website":
 		if e.complexity.User.Website == nil {
@@ -473,6 +489,8 @@ type User {
   phone_number: String
   phone_number_verified: String
   address: String
+  updatedAt: Time
+  createdAt: Time!
 }
 
 type Query {
@@ -1501,6 +1519,57 @@ func (ec *executionContext) _User_address(ctx context.Context, field graphql.Col
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_updatedAt(ctx context.Context, field graphql.CollectedField, obj *User) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "User",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_createdAt(ctx context.Context, field graphql.CollectedField, obj *User) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "User",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _UserActivationRequest_id(ctx context.Context, field graphql.CollectedField, obj *UserActivationRequest) graphql.Marshaler {
@@ -2704,6 +2773,13 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._User_phone_number_verified(ctx, field, obj)
 		case "address":
 			out.Values[i] = ec._User_address(ctx, field, obj)
+		case "updatedAt":
+			out.Values[i] = ec._User_updatedAt(ctx, field, obj)
+		case "createdAt":
+			out.Values[i] = ec._User_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3030,6 +3106,20 @@ func (ec *executionContext) unmarshalNString2string(ctx context.Context, v inter
 
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	return graphql.MarshalString(v)
+}
+
+func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	return graphql.UnmarshalTime(v)
+}
+
+func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	if v.IsZero() {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return graphql.MarshalTime(v)
 }
 
 func (ec *executionContext) marshalNUser2githubᚗcomᚋgraphqlᚑservicesᚋidᚐUser(ctx context.Context, sel ast.SelectionSet, v User) graphql.Marshaler {

@@ -32,6 +32,8 @@ type User struct {
 	PhoneNumber         *string     `json:"phone_number"`
 	PhoneNumberVerified *string     `json:"phone_number_verified"`
 	Address             *string     `json:"address"`
+	UpdatedAt           *time.Time  `json:"updatedAt"`
+	CreatedAt           time.Time   `json:"createdAt"`
 }
 
 type UserActivationRequest struct {

@@ -28,6 +28,8 @@ type User {
   phone_number: String
   phone_number_verified: String
   address: String
+  updatedAt: Time
+  createdAt: Time!
 }
 
 type Query {
