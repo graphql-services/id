@@ -66,6 +66,15 @@ func (r *mutationResolver) UpdatePassword(ctx context.Context, oldPassword strin
 
 type queryResolver struct{ *Resolver }
 
-func (r *queryResolver) User(ctx context.Context, id string) (*User, error) {
-	panic("not implemented")
+func (r *queryResolver) User(ctx context.Context, id string) (u *User, err error) {
+	u = &User{}
+	res := r.DB.Client().First(u, "id = ?", id)
+
+	if res.RecordNotFound() {
+		u = nil
+		return
+	}
+	err = res.Error
+
+	return
 }
