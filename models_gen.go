@@ -9,11 +9,6 @@ import (
 	"time"
 )
 
-type ForgotPasswordRequest struct {
-	ID       string     `json:"id"`
-	ExpireAt *time.Time `json:"expireAt"`
-}
-
 type User struct {
 	ID                  string      `json:"id"`
 	Email               string      `json:"email"`
@@ -34,12 +29,6 @@ type User struct {
 	Address             *string     `json:"address"`
 	UpdatedAt           *time.Time  `json:"updatedAt"`
 	CreatedAt           time.Time   `json:"createdAt"`
-}
-
-type UserActivationRequest struct {
-	ID       string     `json:"id"`
-	UserID   string     `json:"userID"`
-	ExpireAt *time.Time `json:"expireAt"`
 }
 
 type UserInfo struct {

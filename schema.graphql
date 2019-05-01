@@ -56,25 +56,30 @@ input UserInfo {
   address: String
 }
 
-type UserActivationRequest {
-  id: ID!
-  userID: ID!
-  expireAt: Time
-}
-type ForgotPasswordRequest {
-  id: ID!
-  expireAt: Time
-}
-
 type Mutation {
   # create user if not exists and send user's ID
+  # creates requestID for confirming invitation that can be used in method confirmInvitation
   # TODO: this endpoint should be secured some way so it's not possible to fetch user info by email
   inviteUser(email: String!): User!
-  forgotPassword(email: String!): ForgotPasswordRequest!
-  registerUser(email: String!, password: String!, info: UserInfo!): User!
+  # creates requestID for resetting password that can be used in method resetPassword
+  forgotPassword(email: String!): Boolean!
+  # creates requestID activating user that can be used in method activateUser
+  registerUser(email: String!, password: String!, info: UserInfo): User!
 
-  activateUser(userActivationRequestID: ID!): Boolean!
+  # requestID is sent to user using other channel (eg. email)
+  confirmInvitation(
+    requestID: ID!
+    email: String!
+    password: String!
+    info: UserInfo
+  ): User!
+  # requestID is sent to user using other channel (eg. email)
+  activateUser(requestID: ID!, info: UserInfo): Boolean!
+  # requestID is sent to user using other channel (eg. email)
+  resetPassword(requestID: ID!, newPassword: String!): Boolean!
+
+  # this method has to be called with user's access token
   updateUser(info: UserInfo!): User!
-  resetPassword(forgotPasswordRequestID: ID!, newPassword: String!): Boolean!
+  # this method has to be called with user's access token
   updatePassword(oldPassword: String!, newPassword: String!): Boolean!
 }

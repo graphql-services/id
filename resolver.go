@@ -5,12 +5,12 @@ import (
 	"fmt"
 
 	"github.com/badoux/checkmail"
-	"github.com/graphql-services/id/database"
-	uuid "github.com/satori/go.uuid"
 ) // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
 
 type Resolver struct {
-	DB *database.DB
+	UserStore    *UserStore
+	RequestStore *RequestStore
+	IDPClient    *IDPClient
 }
 
 func (r *Resolver) Mutation() MutationResolver {
@@ -29,37 +29,50 @@ func (r *mutationResolver) InviteUser(ctx context.Context, email string) (u *Use
 		return
 	}
 
-	u = &User{}
-	// TODO: search user by account emails, not just primary user email
-	res := r.DB.Client().First(u, "email = ?", email)
-	err = res.Error
-	if err != nil && !res.RecordNotFound() {
+	u, isnew, err := r.UserStore.InviteUser(ctx, email)
+	if err != nil {
 		return
 	}
 
-	if res.RecordNotFound() {
-		u = &User{
-			ID:    uuid.Must(uuid.NewV4()).String(),
-			Email: email,
-		}
-		err = r.DB.Client().Save(u).Error
+	if isnew {
+		_, err = r.RequestStore.CreateInvitationRequest(u.ID)
+		// TODO: send email to user with invitation and instructions
 	}
 
 	return
 }
-func (r *mutationResolver) ForgotPassword(ctx context.Context, email string) (*ForgotPasswordRequest, error) {
+func (r *mutationResolver) ForgotPassword(ctx context.Context, email string) (bool, error) {
 	panic("not implemented")
 }
-func (r *mutationResolver) RegisterUser(ctx context.Context, email string, password string, info UserInfo) (*User, error) {
+func (r *mutationResolver) RegisterUser(ctx context.Context, email string, password string, info *UserInfo) (*User, error) {
 	panic("not implemented")
 }
-func (r *mutationResolver) ActivateUser(ctx context.Context, userActivationRequestID string) (bool, error) {
+func (r *mutationResolver) ConfirmInvitation(ctx context.Context, requestID string, email string, password string, info *UserInfo) (u *User, err error) {
+	req, err := r.RequestStore.GetInvitationRequest(requestID)
+	if err != nil {
+		return
+	}
+
+	u, err = r.UserStore.UpdateUser(ctx, req.UserID, info)
+	if err != nil {
+		return
+	}
+
+	_, err = r.IDPClient.CreateUser(ctx, email, password)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (r *mutationResolver) ActivateUser(ctx context.Context, requestID string, info *UserInfo) (bool, error) {
+	panic("not implemented")
+}
+func (r *mutationResolver) ResetPassword(ctx context.Context, requestID string, newPassword string) (bool, error) {
 	panic("not implemented")
 }
 func (r *mutationResolver) UpdateUser(ctx context.Context, info UserInfo) (*User, error) {
-	panic("not implemented")
-}
-func (r *mutationResolver) ResetPassword(ctx context.Context, forgotPasswordRequestID string, newPassword string) (bool, error) {
 	panic("not implemented")
 }
 func (r *mutationResolver) UpdatePassword(ctx context.Context, oldPassword string, newPassword string) (bool, error) {
@@ -69,14 +82,6 @@ func (r *mutationResolver) UpdatePassword(ctx context.Context, oldPassword strin
 type queryResolver struct{ *Resolver }
 
 func (r *queryResolver) User(ctx context.Context, id string) (u *User, err error) {
-	u = &User{}
-	res := r.DB.Client().First(u, "id = ?", id)
-
-	if res.RecordNotFound() {
-		u = nil
-		return
-	}
-	err = res.Error
-
+	u, err = r.UserStore.GetUser(ctx, id)
 	return
 }

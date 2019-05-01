@@ -42,19 +42,15 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	ForgotPasswordRequest struct {
-		ExpireAt func(childComplexity int) int
-		ID       func(childComplexity int) int
-	}
-
 	Mutation struct {
-		ActivateUser   func(childComplexity int, userActivationRequestID string) int
-		ForgotPassword func(childComplexity int, email string) int
-		InviteUser     func(childComplexity int, email string) int
-		RegisterUser   func(childComplexity int, email string, password string, info UserInfo) int
-		ResetPassword  func(childComplexity int, forgotPasswordRequestID string, newPassword string) int
-		UpdatePassword func(childComplexity int, oldPassword string, newPassword string) int
-		UpdateUser     func(childComplexity int, info UserInfo) int
+		ActivateUser      func(childComplexity int, requestID string, info *UserInfo) int
+		ConfirmInvitation func(childComplexity int, requestID string, email string, password string, info *UserInfo) int
+		ForgotPassword    func(childComplexity int, email string) int
+		InviteUser        func(childComplexity int, email string) int
+		RegisterUser      func(childComplexity int, email string, password string, info *UserInfo) int
+		ResetPassword     func(childComplexity int, requestID string, newPassword string) int
+		UpdatePassword    func(childComplexity int, oldPassword string, newPassword string) int
+		UpdateUser        func(childComplexity int, info UserInfo) int
 	}
 
 	Query struct {
@@ -82,21 +78,16 @@ type ComplexityRoot struct {
 		Website             func(childComplexity int) int
 		Zoneinfo            func(childComplexity int) int
 	}
-
-	UserActivationRequest struct {
-		ExpireAt func(childComplexity int) int
-		ID       func(childComplexity int) int
-		UserID   func(childComplexity int) int
-	}
 }
 
 type MutationResolver interface {
 	InviteUser(ctx context.Context, email string) (*User, error)
-	ForgotPassword(ctx context.Context, email string) (*ForgotPasswordRequest, error)
-	RegisterUser(ctx context.Context, email string, password string, info UserInfo) (*User, error)
-	ActivateUser(ctx context.Context, userActivationRequestID string) (bool, error)
+	ForgotPassword(ctx context.Context, email string) (bool, error)
+	RegisterUser(ctx context.Context, email string, password string, info *UserInfo) (*User, error)
+	ConfirmInvitation(ctx context.Context, requestID string, email string, password string, info *UserInfo) (*User, error)
+	ActivateUser(ctx context.Context, requestID string, info *UserInfo) (bool, error)
+	ResetPassword(ctx context.Context, requestID string, newPassword string) (bool, error)
 	UpdateUser(ctx context.Context, info UserInfo) (*User, error)
-	ResetPassword(ctx context.Context, forgotPasswordRequestID string, newPassword string) (bool, error)
 	UpdatePassword(ctx context.Context, oldPassword string, newPassword string) (bool, error)
 }
 type QueryResolver interface {
@@ -118,20 +109,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "ForgotPasswordRequest.ExpireAt":
-		if e.complexity.ForgotPasswordRequest.ExpireAt == nil {
-			break
-		}
-
-		return e.complexity.ForgotPasswordRequest.ExpireAt(childComplexity), true
-
-	case "ForgotPasswordRequest.ID":
-		if e.complexity.ForgotPasswordRequest.ID == nil {
-			break
-		}
-
-		return e.complexity.ForgotPasswordRequest.ID(childComplexity), true
-
 	case "Mutation.ActivateUser":
 		if e.complexity.Mutation.ActivateUser == nil {
 			break
@@ -142,7 +119,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ActivateUser(childComplexity, args["userActivationRequestID"].(string)), true
+		return e.complexity.Mutation.ActivateUser(childComplexity, args["requestID"].(string), args["info"].(*UserInfo)), true
+
+	case "Mutation.ConfirmInvitation":
+		if e.complexity.Mutation.ConfirmInvitation == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_confirmInvitation_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ConfirmInvitation(childComplexity, args["requestID"].(string), args["email"].(string), args["password"].(string), args["info"].(*UserInfo)), true
 
 	case "Mutation.ForgotPassword":
 		if e.complexity.Mutation.ForgotPassword == nil {
@@ -178,7 +167,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RegisterUser(childComplexity, args["email"].(string), args["password"].(string), args["info"].(UserInfo)), true
+		return e.complexity.Mutation.RegisterUser(childComplexity, args["email"].(string), args["password"].(string), args["info"].(*UserInfo)), true
 
 	case "Mutation.ResetPassword":
 		if e.complexity.Mutation.ResetPassword == nil {
@@ -190,7 +179,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ResetPassword(childComplexity, args["forgotPasswordRequestID"].(string), args["newPassword"].(string)), true
+		return e.complexity.Mutation.ResetPassword(childComplexity, args["requestID"].(string), args["newPassword"].(string)), true
 
 	case "Mutation.UpdatePassword":
 		if e.complexity.Mutation.UpdatePassword == nil {
@@ -361,27 +350,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.Zoneinfo(childComplexity), true
 
-	case "UserActivationRequest.ExpireAt":
-		if e.complexity.UserActivationRequest.ExpireAt == nil {
-			break
-		}
-
-		return e.complexity.UserActivationRequest.ExpireAt(childComplexity), true
-
-	case "UserActivationRequest.ID":
-		if e.complexity.UserActivationRequest.ID == nil {
-			break
-		}
-
-		return e.complexity.UserActivationRequest.ID(childComplexity), true
-
-	case "UserActivationRequest.UserID":
-		if e.complexity.UserActivationRequest.UserID == nil {
-			break
-		}
-
-		return e.complexity.UserActivationRequest.UserID(childComplexity), true
-
 	}
 	return 0, false
 }
@@ -494,6 +462,8 @@ type User {
 }
 
 type Query {
+  # fetch user information by id
+  # TODO: this endpoint should be secured some way so it's not possible to fetch user info by email
   user(id: ID!): User
 }
 
@@ -515,24 +485,31 @@ input UserInfo {
   address: String
 }
 
-type UserActivationRequest {
-  id: ID!
-  userID: ID!
-  expireAt: Time
-}
-type ForgotPasswordRequest {
-  id: ID!
-  expireAt: Time
-}
-
 type Mutation {
+  # create user if not exists and send user's ID
+  # creates requestID for confirming invitation that can be used in method confirmInvitation
+  # TODO: this endpoint should be secured some way so it's not possible to fetch user info by email
   inviteUser(email: String!): User!
-  forgotPassword(email: String!): ForgotPasswordRequest!
-  registerUser(email: String!, password: String!, info: UserInfo!): User!
+  # creates requestID for resetting password that can be used in method resetPassword
+  forgotPassword(email: String!): Boolean!
+  # creates requestID activating user that can be used in method activateUser
+  registerUser(email: String!, password: String!, info: UserInfo): User!
 
-  activateUser(userActivationRequestID: ID!): Boolean!
+  # requestID is sent to user using other channel (eg. email)
+  confirmInvitation(
+    requestID: ID!
+    email: String!
+    password: String!
+    info: UserInfo
+  ): User!
+  # requestID is sent to user using other channel (eg. email)
+  activateUser(requestID: ID!, info: UserInfo): Boolean!
+  # requestID is sent to user using other channel (eg. email)
+  resetPassword(requestID: ID!, newPassword: String!): Boolean!
+
+  # this method has to be called with user's access token
   updateUser(info: UserInfo!): User!
-  resetPassword(forgotPasswordRequestID: ID!, newPassword: String!): Boolean!
+  # this method has to be called with user's access token
   updatePassword(oldPassword: String!, newPassword: String!): Boolean!
 }
 `},
@@ -546,13 +523,59 @@ func (ec *executionContext) field_Mutation_activateUser_args(ctx context.Context
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["userActivationRequestID"]; ok {
+	if tmp, ok := rawArgs["requestID"]; ok {
 		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["userActivationRequestID"] = arg0
+	args["requestID"] = arg0
+	var arg1 *UserInfo
+	if tmp, ok := rawArgs["info"]; ok {
+		arg1, err = ec.unmarshalOUserInfo2ᚖgithubᚗcomᚋgraphqlᚑservicesᚋidᚐUserInfo(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["info"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_confirmInvitation_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["requestID"]; ok {
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["requestID"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["email"]; ok {
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["email"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["password"]; ok {
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["password"] = arg2
+	var arg3 *UserInfo
+	if tmp, ok := rawArgs["info"]; ok {
+		arg3, err = ec.unmarshalOUserInfo2ᚖgithubᚗcomᚋgraphqlᚑservicesᚋidᚐUserInfo(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["info"] = arg3
 	return args, nil
 }
 
@@ -603,9 +626,9 @@ func (ec *executionContext) field_Mutation_registerUser_args(ctx context.Context
 		}
 	}
 	args["password"] = arg1
-	var arg2 UserInfo
+	var arg2 *UserInfo
 	if tmp, ok := rawArgs["info"]; ok {
-		arg2, err = ec.unmarshalNUserInfo2githubᚗcomᚋgraphqlᚑservicesᚋidᚐUserInfo(ctx, tmp)
+		arg2, err = ec.unmarshalOUserInfo2ᚖgithubᚗcomᚋgraphqlᚑservicesᚋidᚐUserInfo(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -618,13 +641,13 @@ func (ec *executionContext) field_Mutation_resetPassword_args(ctx context.Contex
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["forgotPasswordRequestID"]; ok {
+	if tmp, ok := rawArgs["requestID"]; ok {
 		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["forgotPasswordRequestID"] = arg0
+	args["requestID"] = arg0
 	var arg1 string
 	if tmp, ok := rawArgs["newPassword"]; ok {
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
@@ -732,57 +755,6 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _ForgotPasswordRequest_id(ctx context.Context, field graphql.CollectedField, obj *ForgotPasswordRequest) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "ForgotPasswordRequest",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _ForgotPasswordRequest_expireAt(ctx context.Context, field graphql.CollectedField, obj *ForgotPasswordRequest) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "ForgotPasswordRequest",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ExpireAt, nil
-	})
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*time.Time)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Mutation_inviteUser(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -845,10 +817,10 @@ func (ec *executionContext) _Mutation_forgotPassword(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*ForgotPasswordRequest)
+	res := resTmp.(bool)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNForgotPasswordRequest2ᚖgithubᚗcomᚋgraphqlᚑservicesᚋidᚐForgotPasswordRequest(ctx, field.Selections, res)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_registerUser(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
@@ -871,7 +843,41 @@ func (ec *executionContext) _Mutation_registerUser(ctx context.Context, field gr
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().RegisterUser(rctx, args["email"].(string), args["password"].(string), args["info"].(UserInfo))
+		return ec.resolvers.Mutation().RegisterUser(rctx, args["email"].(string), args["password"].(string), args["info"].(*UserInfo))
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*User)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋgraphqlᚑservicesᚋidᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_confirmInvitation(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_confirmInvitation_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ConfirmInvitation(rctx, args["requestID"].(string), args["email"].(string), args["password"].(string), args["info"].(*UserInfo))
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -905,7 +911,41 @@ func (ec *executionContext) _Mutation_activateUser(ctx context.Context, field gr
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ActivateUser(rctx, args["userActivationRequestID"].(string))
+		return ec.resolvers.Mutation().ActivateUser(rctx, args["requestID"].(string), args["info"].(*UserInfo))
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_resetPassword(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_resetPassword_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ResetPassword(rctx, args["requestID"].(string), args["newPassword"].(string))
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -951,40 +991,6 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNUser2ᚖgithubᚗcomᚋgraphqlᚑservicesᚋidᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_resetPassword(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "Mutation",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_resetPassword_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ResetPassword(rctx, args["forgotPasswordRequestID"].(string), args["newPassword"].(string))
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_updatePassword(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
@@ -1570,84 +1576,6 @@ func (ec *executionContext) _User_createdAt(ctx context.Context, field graphql.C
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _UserActivationRequest_id(ctx context.Context, field graphql.CollectedField, obj *UserActivationRequest) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "UserActivationRequest",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _UserActivationRequest_userID(ctx context.Context, field graphql.CollectedField, obj *UserActivationRequest) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "UserActivationRequest",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UserID, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _UserActivationRequest_expireAt(ctx context.Context, field graphql.CollectedField, obj *UserActivationRequest) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "UserActivationRequest",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ExpireAt, nil
-	})
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*time.Time)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) graphql.Marshaler {
@@ -2591,35 +2519,6 @@ func (ec *executionContext) unmarshalInputUserInfo(ctx context.Context, v interf
 
 // region    **************************** object.gotpl ****************************
 
-var forgotPasswordRequestImplementors = []string{"ForgotPasswordRequest"}
-
-func (ec *executionContext) _ForgotPasswordRequest(ctx context.Context, sel ast.SelectionSet, obj *ForgotPasswordRequest) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, forgotPasswordRequestImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	invalid := false
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("ForgotPasswordRequest")
-		case "id":
-			out.Values[i] = ec._ForgotPasswordRequest_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		case "expireAt":
-			out.Values[i] = ec._ForgotPasswordRequest_expireAt(ctx, field, obj)
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalid {
-		return graphql.Null
-	}
-	return out
-}
-
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -2650,18 +2549,23 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
+		case "confirmInvitation":
+			out.Values[i] = ec._Mutation_confirmInvitation(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "activateUser":
 			out.Values[i] = ec._Mutation_activateUser(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		case "updateUser":
-			out.Values[i] = ec._Mutation_updateUser(ctx, field)
+		case "resetPassword":
+			out.Values[i] = ec._Mutation_resetPassword(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		case "resetPassword":
-			out.Values[i] = ec._Mutation_resetPassword(ctx, field)
+		case "updateUser":
+			out.Values[i] = ec._Mutation_updateUser(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -2780,40 +2684,6 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalid {
-		return graphql.Null
-	}
-	return out
-}
-
-var userActivationRequestImplementors = []string{"UserActivationRequest"}
-
-func (ec *executionContext) _UserActivationRequest(ctx context.Context, sel ast.SelectionSet, obj *UserActivationRequest) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, userActivationRequestImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	invalid := false
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("UserActivationRequest")
-		case "id":
-			out.Values[i] = ec._UserActivationRequest_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		case "userID":
-			out.Values[i] = ec._UserActivationRequest_userID(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		case "expireAt":
-			out.Values[i] = ec._UserActivationRequest_expireAt(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3076,20 +2946,6 @@ func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interf
 
 func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.SelectionSet, v bool) graphql.Marshaler {
 	return graphql.MarshalBoolean(v)
-}
-
-func (ec *executionContext) marshalNForgotPasswordRequest2githubᚗcomᚋgraphqlᚑservicesᚋidᚐForgotPasswordRequest(ctx context.Context, sel ast.SelectionSet, v ForgotPasswordRequest) graphql.Marshaler {
-	return ec._ForgotPasswordRequest(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNForgotPasswordRequest2ᚖgithubᚗcomᚋgraphqlᚑservicesᚋidᚐForgotPasswordRequest(ctx context.Context, sel ast.SelectionSet, v *ForgotPasswordRequest) graphql.Marshaler {
-	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._ForgotPasswordRequest(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
@@ -3459,6 +3315,18 @@ func (ec *executionContext) marshalOUserGender2ᚖgithubᚗcomᚋgraphqlᚑservi
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) unmarshalOUserInfo2githubᚗcomᚋgraphqlᚑservicesᚋidᚐUserInfo(ctx context.Context, v interface{}) (UserInfo, error) {
+	return ec.unmarshalInputUserInfo(ctx, v)
+}
+
+func (ec *executionContext) unmarshalOUserInfo2ᚖgithubᚗcomᚋgraphqlᚑservicesᚋidᚐUserInfo(ctx context.Context, v interface{}) (*UserInfo, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOUserInfo2githubᚗcomᚋgraphqlᚑservicesᚋidᚐUserInfo(ctx, v)
+	return &res, err
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
