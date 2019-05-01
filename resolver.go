@@ -71,6 +71,8 @@ func (r *mutationResolver) ConfirmInvitation(ctx context.Context, requestID stri
 		return
 	}
 
+	_, err = r.RequestStore.DeleteInvitationRequest(requestID)
+
 	return
 }
 

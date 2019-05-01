@@ -27,6 +27,11 @@ func (s *RequestStore) GetInvitationRequest(id string) (r *UserInvitationRequest
 	err = s.DB.Client().First(r, "id = ?", id).Error
 	return
 }
+func (s *RequestStore) DeleteInvitationRequest(id string) (r *UserInvitationRequest, err error) {
+	r = &UserInvitationRequest{}
+	err = s.DB.Client().Delete(r, "id = ?", id).Error
+	return
+}
 
 func (s *RequestStore) CreateActivationRequest(userId string) (r *UserActivationRequest, err error) {
 	r = &UserActivationRequest{
