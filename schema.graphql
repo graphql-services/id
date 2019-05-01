@@ -67,12 +67,7 @@ type Mutation {
   registerUser(email: String!, password: String!, info: UserInfo): User!
 
   # requestID is sent to user using other channel (eg. email)
-  confirmInvitation(
-    requestID: ID!
-    email: String!
-    password: String!
-    info: UserInfo
-  ): User!
+  confirmInvitation(requestID: ID!, password: String!, info: UserInfo): User!
   # requestID is sent to user using other channel (eg. email)
   activateUser(requestID: ID!, info: UserInfo): Boolean!
   # requestID is sent to user using other channel (eg. email)

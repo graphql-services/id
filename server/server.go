@@ -30,11 +30,16 @@ func main() {
 	defer db.Close()
 	db.AutoMigrate(&id.User{}, &id.UserActivationRequest{}, &id.ForgotPasswordRequest{}, &id.UserInvitationRequest{})
 
+	ec, err := id.NewEventController()
+	if err != nil {
+		panic(err)
+	}
 	userStore := &id.UserStore{db}
 	requestStore := &id.RequestStore{db}
 	idpClient := id.NewIDPClient()
+	resolver := &id.Resolver{UserStore: userStore, RequestStore: requestStore, IDPClient: idpClient, EventController: &ec}
 
-	gqlHandler := handler.GraphQL(id.NewExecutableSchema(id.Config{Resolvers: &id.Resolver{UserStore: userStore, RequestStore: requestStore, IDPClient: idpClient}}))
+	gqlHandler := handler.GraphQL(id.NewExecutableSchema(id.Config{Resolvers: resolver}))
 	playgroundHandler := handler.Playground("GraphQL playground", "/graphql")
 	http.HandleFunc("/graphql", func(res http.ResponseWriter, req *http.Request) {
 		if req.Method == "GET" {

@@ -44,7 +44,7 @@ type DirectiveRoot struct {
 type ComplexityRoot struct {
 	Mutation struct {
 		ActivateUser      func(childComplexity int, requestID string, info *UserInfo) int
-		ConfirmInvitation func(childComplexity int, requestID string, email string, password string, info *UserInfo) int
+		ConfirmInvitation func(childComplexity int, requestID string, password string, info *UserInfo) int
 		ForgotPassword    func(childComplexity int, email string) int
 		InviteUser        func(childComplexity int, email string) int
 		RegisterUser      func(childComplexity int, email string, password string, info *UserInfo) int
@@ -84,7 +84,7 @@ type MutationResolver interface {
 	InviteUser(ctx context.Context, email string) (*User, error)
 	ForgotPassword(ctx context.Context, email string) (bool, error)
 	RegisterUser(ctx context.Context, email string, password string, info *UserInfo) (*User, error)
-	ConfirmInvitation(ctx context.Context, requestID string, email string, password string, info *UserInfo) (*User, error)
+	ConfirmInvitation(ctx context.Context, requestID string, password string, info *UserInfo) (*User, error)
 	ActivateUser(ctx context.Context, requestID string, info *UserInfo) (bool, error)
 	ResetPassword(ctx context.Context, requestID string, newPassword string) (bool, error)
 	UpdateUser(ctx context.Context, info UserInfo) (*User, error)
@@ -131,7 +131,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ConfirmInvitation(childComplexity, args["requestID"].(string), args["email"].(string), args["password"].(string), args["info"].(*UserInfo)), true
+		return e.complexity.Mutation.ConfirmInvitation(childComplexity, args["requestID"].(string), args["password"].(string), args["info"].(*UserInfo)), true
 
 	case "Mutation.ForgotPassword":
 		if e.complexity.Mutation.ForgotPassword == nil {
@@ -496,12 +496,7 @@ type Mutation {
   registerUser(email: String!, password: String!, info: UserInfo): User!
 
   # requestID is sent to user using other channel (eg. email)
-  confirmInvitation(
-    requestID: ID!
-    email: String!
-    password: String!
-    info: UserInfo
-  ): User!
+  confirmInvitation(requestID: ID!, password: String!, info: UserInfo): User!
   # requestID is sent to user using other channel (eg. email)
   activateUser(requestID: ID!, info: UserInfo): Boolean!
   # requestID is sent to user using other channel (eg. email)
@@ -553,29 +548,21 @@ func (ec *executionContext) field_Mutation_confirmInvitation_args(ctx context.Co
 	}
 	args["requestID"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["email"]; ok {
+	if tmp, ok := rawArgs["password"]; ok {
 		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["email"] = arg1
-	var arg2 string
-	if tmp, ok := rawArgs["password"]; ok {
-		arg2, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["password"] = arg2
-	var arg3 *UserInfo
+	args["password"] = arg1
+	var arg2 *UserInfo
 	if tmp, ok := rawArgs["info"]; ok {
-		arg3, err = ec.unmarshalOUserInfo2ᚖgithubᚗcomᚋgraphqlᚑservicesᚋidᚐUserInfo(ctx, tmp)
+		arg2, err = ec.unmarshalOUserInfo2ᚖgithubᚗcomᚋgraphqlᚑservicesᚋidᚐUserInfo(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["info"] = arg3
+	args["info"] = arg2
 	return args, nil
 }
 
@@ -877,7 +864,7 @@ func (ec *executionContext) _Mutation_confirmInvitation(ctx context.Context, fie
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ConfirmInvitation(rctx, args["requestID"].(string), args["email"].(string), args["password"].(string), args["info"].(*UserInfo))
+		return ec.resolvers.Mutation().ConfirmInvitation(rctx, args["requestID"].(string), args["password"].(string), args["info"].(*UserInfo))
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {

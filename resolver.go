@@ -8,9 +8,10 @@ import (
 ) // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
 
 type Resolver struct {
-	UserStore    *UserStore
-	RequestStore *RequestStore
-	IDPClient    *IDPClient
+	UserStore       *UserStore
+	RequestStore    *RequestStore
+	IDPClient       *IDPClient
+	EventController *EventController
 }
 
 func (r *Resolver) Mutation() MutationResolver {
@@ -35,7 +36,14 @@ func (r *mutationResolver) InviteUser(ctx context.Context, email string) (u *Use
 	}
 
 	if isnew {
-		_, err = r.RequestStore.CreateInvitationRequest(u.ID)
+		request, requestErr := r.RequestStore.CreateInvitationRequest(u.ID)
+		err = requestErr
+		if err != nil {
+			return
+		}
+
+		err = r.EventController.SendUserInvitationRequest(ctx, request)
+
 		// TODO: send email to user with invitation and instructions
 	}
 
@@ -47,7 +55,7 @@ func (r *mutationResolver) ForgotPassword(ctx context.Context, email string) (bo
 func (r *mutationResolver) RegisterUser(ctx context.Context, email string, password string, info *UserInfo) (*User, error) {
 	panic("not implemented")
 }
-func (r *mutationResolver) ConfirmInvitation(ctx context.Context, requestID string, email string, password string, info *UserInfo) (u *User, err error) {
+func (r *mutationResolver) ConfirmInvitation(ctx context.Context, requestID string, password string, info *UserInfo) (u *User, err error) {
 	req, err := r.RequestStore.GetInvitationRequest(requestID)
 	if err != nil {
 		return
@@ -58,7 +66,7 @@ func (r *mutationResolver) ConfirmInvitation(ctx context.Context, requestID stri
 		return
 	}
 
-	_, err = r.IDPClient.CreateUser(ctx, email, password)
+	_, err = r.IDPClient.CreateUser(ctx, u.Email, password)
 	if err != nil {
 		return
 	}
