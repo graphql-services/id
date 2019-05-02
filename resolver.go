@@ -42,7 +42,7 @@ func (r *mutationResolver) InviteUser(ctx context.Context, email string) (u *Use
 			return
 		}
 
-		err = r.EventController.SendUserInvitationRequest(ctx, request)
+		err = r.EventController.SendUserInvitationRequest(ctx, request, u)
 
 		// TODO: send email to user with invitation and instructions
 	}
