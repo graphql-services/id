@@ -43,3 +43,25 @@ func (s *RequestStore) CreateActivationRequest(userId string) (r *UserActivation
 
 	return
 }
+
+func (s *RequestStore) CreateForgotPasswordRequest(userId string) (r *ForgotPasswordRequest, err error) {
+	r = &ForgotPasswordRequest{
+		ID:     uuid.Must(uuid.NewV4()).String(),
+		UserID: userId,
+	}
+
+	err = s.DB.Client().Save(r).Error
+
+	return
+}
+
+func (s *RequestStore) GetForgotPasswordRequest(id string) (r *ForgotPasswordRequest, err error) {
+	r = &ForgotPasswordRequest{}
+	err = s.DB.Client().First(r, "id = ?", id).Error
+	return
+}
+func (s *RequestStore) DeleteForgotPasswordRequest(id string) (r *ForgotPasswordRequest, err error) {
+	r = &ForgotPasswordRequest{}
+	err = s.DB.Client().Delete(r, "id = ?", id).Error
+	return
+}

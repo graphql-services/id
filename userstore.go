@@ -32,6 +32,19 @@ func (s *UserStore) InviteUser(ctx context.Context, email string) (u *User, new 
 	return
 }
 
+func (s *UserStore) FindUserByEmail(ctx context.Context, email string) (u *User, err error) {
+	u = &User{}
+	res := s.DB.Client().First(u, "email = ?", email)
+
+	if res.RecordNotFound() {
+		u = nil
+		return
+	}
+	err = res.Error
+
+	return
+}
+
 func (s *UserStore) GetUser(ctx context.Context, id string) (u *User, err error) {
 	u = &User{}
 	res := s.DB.Client().First(u, "id = ?", id)

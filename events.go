@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	UserInvitedEvent = "com.graphql.id.user.invited"
+	UserInvitedEvent    = "com.graphql.id.user.invited"
+	ForgotPasswordEvent = "com.graphql.id.user.forgot-password"
 )
 
 type EventController struct {
@@ -58,6 +59,20 @@ func (c *EventController) SendUserInvitationRequest(ctx context.Context, r *User
 	event.SetID(r.ID)
 	event.SetType(UserInvitedEvent)
 	event.SetSource(fmt.Sprintf("http://graphql-id/invited-user/%s", r.UserID))
+	event.SetData(UserInvitationRequestEvent{
+		RequestID: r.ID,
+		User:      *u,
+	})
+
+	err = c.send(ctx, event)
+	return
+}
+
+func (c *EventController) SendForgotPasswordRequest(ctx context.Context, r *ForgotPasswordRequest, u *User) (err error) {
+	event := cloudevents.NewEvent()
+	event.SetID(r.ID)
+	event.SetType(ForgotPasswordEvent)
+	event.SetSource(fmt.Sprintf("http://graphql-id/forgot-password/%s", r.UserID))
 	event.SetData(UserInvitationRequestEvent{
 		RequestID: r.ID,
 		User:      *u,

@@ -11,5 +11,6 @@ type UserActivationRequest struct {
 	UserID string `json:"userId" gorm:"primary_key"`
 }
 type ForgotPasswordRequest struct {
-	ID string `json:"id" gorm:"primary_key"`
+	ID     string `json:"id" gorm:"primary_key"`
+	UserID string `json:"userId" gorm:"primary_key"`
 }

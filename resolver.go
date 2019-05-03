@@ -43,14 +43,31 @@ func (r *mutationResolver) InviteUser(ctx context.Context, email string) (u *Use
 		}
 
 		err = r.EventController.SendUserInvitationRequest(ctx, request, u)
-
-		// TODO: send email to user with invitation and instructions
 	}
 
 	return
 }
-func (r *mutationResolver) ForgotPassword(ctx context.Context, email string) (bool, error) {
-	panic("not implemented")
+func (r *mutationResolver) ForgotPassword(ctx context.Context, email string) (res bool, err error) {
+	err = checkmail.ValidateFormat(email)
+	if err != nil {
+		err = fmt.Errorf("invalid email format")
+		return
+	}
+
+	u, err := r.UserStore.FindUserByEmail(ctx, email)
+	if err != nil {
+		return
+	}
+
+	request, requestErr := r.RequestStore.CreateForgotPasswordRequest(u.ID)
+	err = requestErr
+	if err != nil {
+		return
+	}
+
+	err = r.EventController.SendForgotPasswordRequest(ctx, request, u)
+
+	return
 }
 func (r *mutationResolver) RegisterUser(ctx context.Context, email string, password string, info *UserInfo) (*User, error) {
 	panic("not implemented")
@@ -79,8 +96,28 @@ func (r *mutationResolver) ConfirmInvitation(ctx context.Context, requestID stri
 func (r *mutationResolver) ActivateUser(ctx context.Context, requestID string, info *UserInfo) (bool, error) {
 	panic("not implemented")
 }
-func (r *mutationResolver) ResetPassword(ctx context.Context, requestID string, newPassword string) (bool, error) {
-	panic("not implemented")
+func (r *mutationResolver) ResetPassword(ctx context.Context, requestID string, newPassword string) (res bool, err error) {
+	req, err := r.RequestStore.GetForgotPasswordRequest(requestID)
+	if err != nil {
+		return
+	}
+
+	u, err := r.UserStore.GetUser(ctx, req.UserID)
+	if err != nil {
+		return
+	}
+
+	_, err = r.IDPClient.ChangePassword(ctx, u.Email, newPassword)
+	if err != nil {
+		return
+	}
+
+	_, err = r.RequestStore.DeleteForgotPasswordRequest(requestID)
+
+	if err == nil {
+		res = true
+	}
+	return
 }
 func (r *mutationResolver) UpdateUser(ctx context.Context, info UserInfo) (*User, error) {
 	panic("not implemented")
