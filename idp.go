@@ -21,7 +21,7 @@ mutation($email: String!, $password: String!) {
 `
 	changeIDPUserPasswordMutation = `
 mutation($email: String!, $newPassword: String!) {
-	result: changePassword(email: $email, newPassword: $password) {
+	result: changePassword(email: $email, newPassword: $newPassword) {
 		id
 		email
 		email_verified
