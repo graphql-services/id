@@ -35,8 +35,8 @@ mutation($email: String!) {
 `
 )
 
-// User ...
-type User struct {
+// InvitedUser ...
+type InvitedUser struct {
 	ID         string `json:"id" gorm:"primary_key"`
 	Name       string `json:"name"`
 	Email      string `json:"email"`
@@ -47,11 +47,11 @@ type User struct {
 
 // UserProviderInviteResponse ...
 type UserProviderInviteResponse struct {
-	Result User
+	Result InvitedUser
 }
 
 // InviteUser ...
-func (c *Client) InviteUser(ctx context.Context, email string) (user User, err error) {
+func (c *Client) InviteUser(ctx context.Context, email string) (user InvitedUser, err error) {
 	var res UserProviderInviteResponse
 
 	req := graphql.NewRequest(inviteUserQuery)
