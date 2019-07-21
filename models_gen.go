@@ -12,6 +12,7 @@ import (
 type User struct {
 	ID                  string      `json:"id"`
 	Email               string      `json:"email"`
+	EmailVerified       bool        `json:"email_verified"`
 	GivenName           *string     `json:"given_name"`
 	FamilyName          *string     `json:"family_name"`
 	MiddleName          *string     `json:"middle_name"`
