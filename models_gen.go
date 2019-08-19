@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+type _Entity interface {
+	Is_Entity()
+}
+
 type User struct {
 	ID                  string      `json:"id"`
 	Email               string      `json:"email"`
@@ -32,6 +36,8 @@ type User struct {
 	CreatedAt           time.Time   `json:"createdAt"`
 }
 
+func (User) Is_Entity() {}
+
 type UserInfo struct {
 	GivenName           *string     `json:"given_name"`
 	FamilyName          *string     `json:"family_name"`
@@ -48,6 +54,10 @@ type UserInfo struct {
 	PhoneNumber         *string     `json:"phone_number"`
 	PhoneNumberVerified *string     `json:"phone_number_verified"`
 	Address             *string     `json:"address"`
+}
+
+type _Service struct {
+	Sdl *string `json:"sdl"`
 }
 
 type UserGender string

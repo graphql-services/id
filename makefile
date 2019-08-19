@@ -40,7 +40,7 @@ deploy-local:
 	mv app /usr/local/bin/${IMAGE_NAME}
 
 run:
-	OAUTH_URL=https://id.novacloud.cz/oauth/graphql IDP_URL=http://localhost:8003/graphql DATABASE_URL=sqlite3://test.db EVENT_TRANSPORT_URL=http://localhost:8010 PORT=8080 go run server/server.go
+	OAUTH_URL=https://id.novacloud.cz/oauth/graphql IDP_URL=http://localhost:8003/graphql DATABASE_URL=sqlite3://test.db EVENT_TRANSPORT_URL2=http://localhost:8010 PORT=8080 go run server/server.go
 
 # test:
 # 	DATABASE_URL=sqlite3://test.db $(IMAGE_NAME) server -p 8005

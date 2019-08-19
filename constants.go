@@ -1,12 +1,7 @@
-scalar Time
-scalar _Any
+package id
 
-type _Service {
-  sdl: String
-}
-
-union _Entity = User
-
+const (
+	SchemaSDL string = `scalar Time
 schema {
   query: Query
   mutation: Mutation
@@ -44,10 +39,6 @@ type Query {
   # fetch user information by id
   # TODO: this endpoint should be secured some way so it's not possible to fetch user info by email
   user(id: ID!): User
-
-  # federation
-  _service: _Service!
-  _entities(representations: [_Any!]!): [_Entity]!
 }
 
 input UserInfo {
@@ -90,3 +81,5 @@ type Mutation {
   # this method has to be called with user's access token
   updatePassword(oldPassword: String!, newPassword: String!): Boolean!
 }
+`
+)

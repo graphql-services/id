@@ -18,3 +18,6 @@ models:
   #   model: github.com/graphql-services/iam.User
   # UserAccount:
   #   model: github.com/graphql-services/oauth.UserAccount
+
+  _Any:
+    model: github.com/graphql-services/id._Any
