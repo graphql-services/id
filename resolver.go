@@ -134,34 +134,32 @@ func (r *queryResolver) _service(ctx context.Context) (*_Service, error) {
 		Sdl: &sdl,
 	}, nil
 }
-func (r *queryResolver) _entities(ctx context.Context, representations []interface{}) (res []_Entity,err error) {
+func (r *queryResolver) _entities(ctx context.Context, representations []interface{}) (res []_Entity, err error) {
 	res = []_Entity{}
 
-	for _,repr := range representations {
+	for _, repr := range representations {
 		values, ok := repr.(map[string]interface{})
 		if !ok {
 			err = fmt.Errorf("The _entities resolver received invalid representation type")
 			break
 		}
-		
-		fmt.Println("???",repr)
-		typename,ok := values["__typename"].(string)
-		if !ok || typename!= "User" {
+
+		typename, ok := values["__typename"].(string)
+		if !ok || typename != "User" {
 			continue
 		}
 
-
-		identifier,ok := values["id"].(string)
+		identifier, ok := values["id"].(string)
 		if !ok {
 			continue
 		}
 
-		user,_err := r.Query().User(ctx,identifier)
+		user, _err := r.Query().User(ctx, identifier)
 		err = _err
-		if err!=nil{
+		if err != nil {
 			break
 		}
-		res = append(res,user)
+		res = append(res, user)
 	}
 
 	return res, nil
