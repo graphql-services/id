@@ -3,8 +3,8 @@ package id
 import (
 	"context"
 
+	uuid "github.com/gofrs/uuid"
 	"github.com/graphql-services/id/database"
-	uuid "github.com/satori/go.uuid"
 )
 
 type UserStore struct {
