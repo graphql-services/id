@@ -27,13 +27,13 @@ push: login
 	docker push $(TAG)
 
 generate:
-	go run github.com/99designs/gqlgen
-	go generate ./...
+	GO111MODULE=on go run github.com/99designs/gqlgen
+	GO111MODULE=on go generate ./...
 
 build-local:
 	# go get ./...
 	# go build -o $(IMAGE_NAME) ./server/server.go
-	go build -o app
+	GO111MODULE=on go build -o app
 
 deploy-local:
 	make build-local
