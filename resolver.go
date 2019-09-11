@@ -137,6 +137,8 @@ func (r *queryResolver) _service(ctx context.Context) (*_Service, error) {
 func (r *queryResolver) _entities(ctx context.Context, representations []interface{}) (res []_Entity, err error) {
 	res = []_Entity{}
 
+	keys := []string{}
+
 	for _, repr := range representations {
 		values, ok := repr.(map[string]interface{})
 		if !ok {
@@ -156,12 +158,24 @@ func (r *queryResolver) _entities(ctx context.Context, representations []interfa
 			continue
 		}
 
-		user, _err := r.Query().User(ctx, identifier)
-		err = _err
-		if user == nil {
-			res = append(res, nil)
+		keys = append(keys, identifier)
+	}
+
+	users, err := r.UserStore.GetUsers(ctx, keys)
+	if err != nil {
+		return
+	}
+	usersMap := map[string]User{}
+	for _, u := range users {
+		usersMap[u.ID] = u
+	}
+
+	for _, key := range keys {
+		user, ok := usersMap[key]
+		if ok {
+			res = append(res, &user)
 		} else {
-			res = append(res, user)
+			res = append(res, nil)
 		}
 	}
 

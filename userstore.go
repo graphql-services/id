@@ -57,6 +57,18 @@ func (s *UserStore) GetUser(ctx context.Context, id string) (u *User, err error)
 
 	return
 }
+func (s *UserStore) GetUsers(ctx context.Context, ids []string) (u []User, err error) {
+	u = []User{}
+	res := s.DB.Client().Find(&u, "id IN (?)", ids)
+
+	if res.RecordNotFound() {
+		u = nil
+		return
+	}
+	err = res.Error
+
+	return
+}
 
 func (s *UserStore) UpdateUser(ctx context.Context, id string, info *UserInfo) (u *User, err error) {
 	u = &User{}
