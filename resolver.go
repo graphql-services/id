@@ -158,7 +158,11 @@ func (r *queryResolver) _entities(ctx context.Context, representations []interfa
 
 		user, _err := r.Query().User(ctx, identifier)
 		err = _err
-		res = append(res, user)
+		if user == nil {
+			res = append(res, nil)
+		} else {
+			res = append(res, user)
+		}
 	}
 
 	return res, nil

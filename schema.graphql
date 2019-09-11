@@ -17,7 +17,7 @@ enum UserGender {
   female
 }
 
-type User @key(fields: "id") {
+type User {
   id: ID!
   email: String!
   email_verified: Boolean!

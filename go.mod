@@ -10,7 +10,7 @@ require (
 	github.com/gogo/protobuf v1.2.0 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
-	github.com/graphql-services/memberships v0.0.0-20190822115115-573a49aa3dbf // indirect
+	github.com/graphql-services/memberships v0.0.0-20190822115115-573a49aa3dbf
 	github.com/jinzhu/gorm v1.9.10
 	github.com/machinebox/graphql v0.2.2
 	github.com/satori/go.uuid v1.2.0
