@@ -2,10 +2,6 @@ package id
 
 const (
 	SchemaSDL string = `scalar Time
-schema {
-  query: Query
-  mutation: Mutation
-}
 
 enum UserGender {
   male
