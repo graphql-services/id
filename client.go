@@ -33,10 +33,21 @@ mutation($email: String!) {
 	}
 }  
 `
+	getUserQuery = `
+query($id: ID!) {
+	result: user(id: $id) {
+		id
+		email
+		given_name
+		family_name
+		middle_name
+	}
+}  
+`
 )
 
-// InvitedUser ...
-type InvitedUser struct {
+// IDUser ...
+type IDUser struct {
 	ID         string `json:"id" gorm:"primary_key"`
 	Name       string `json:"name"`
 	Email      string `json:"email"`
@@ -47,15 +58,33 @@ type InvitedUser struct {
 
 // UserProviderInviteResponse ...
 type UserProviderInviteResponse struct {
-	Result InvitedUser
+	Result IDUser
 }
 
-// InviteUser ...
-func (c *Client) InviteUser(ctx context.Context, email string) (user InvitedUser, err error) {
+// InviteUser invite user with given Email. If user with given email exists, it just return without any invitation.
+func (c *Client) InviteUser(ctx context.Context, email string) (user IDUser, err error) {
 	var res UserProviderInviteResponse
 
 	req := graphql.NewRequest(inviteUserQuery)
 	req.Var("email", email)
+	err = c.run(ctx, req, &res)
+
+	user = res.Result
+
+	return
+}
+
+// UserProviderGetResponse ...
+type UserProviderGetResponse struct {
+	Result IDUser
+}
+
+// GetUser fetch user by ID, returns error if user not found
+func (c *Client) GetUser(ctx context.Context, id string) (user IDUser, err error) {
+	var res UserProviderInviteResponse
+
+	req := graphql.NewRequest(getUserQuery)
+	req.Var("id", id)
 	err = c.run(ctx, req, &res)
 
 	user = res.Result
