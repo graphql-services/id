@@ -28,8 +28,8 @@ func (c *Client) run(ctx context.Context, req *graphql.Request, data interface{}
 
 const (
 	inviteUserQuery = `
-mutation($email: String!, $info: UserInfo) {
-	result: inviteUser(email: $email, userInfo: $info) {
+mutation($email: String!, $userInfo: UserInfo) {
+	result: inviteUser(email: $email, userInfo: $userInfo) {
 		id
 		email
 		given_name
