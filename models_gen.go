@@ -56,6 +56,25 @@ type UserInfo struct {
 	Address             *string     `json:"address"`
 }
 
+func (info UserInfo) UpdateUser(u *User) {
+	u.GivenName = info.GivenName
+	u.FamilyName = info.FamilyName
+	u.MiddleName = info.MiddleName
+	u.Nickname = info.Nickname
+	u.PreferredUsername = info.FamilyName
+	u.PreferredUsername = info.PreferredUsername
+	u.Profile = info.Profile
+	u.Picture = info.Picture
+	u.Website = info.Website
+	u.Gender = info.Gender
+	u.Birthdate = info.Birthdate
+	u.Zoneinfo = info.Zoneinfo
+	u.Locale = info.Locale
+	u.PhoneNumber = info.PhoneNumber
+	u.PhoneNumberVerified = info.PhoneNumberVerified
+	u.Address = info.Address
+}
+
 type _Service struct {
 	Sdl *string `json:"sdl"`
 }

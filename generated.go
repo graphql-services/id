@@ -48,7 +48,7 @@ type ComplexityRoot struct {
 		ActivateUser      func(childComplexity int, requestID string, info *UserInfo) int
 		ConfirmInvitation func(childComplexity int, requestID string, password string, info *UserInfo) int
 		ForgotPassword    func(childComplexity int, email string) int
-		InviteUser        func(childComplexity int, email string) int
+		InviteUser        func(childComplexity int, email string, userInfo *UserInfo) int
 		RegisterUser      func(childComplexity int, email string, password string, info *UserInfo) int
 		ResetPassword     func(childComplexity int, requestID string, newPassword string) int
 		UpdatePassword    func(childComplexity int, oldPassword string, newPassword string) int
@@ -90,7 +90,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	InviteUser(ctx context.Context, email string) (*User, error)
+	InviteUser(ctx context.Context, email string, userInfo *UserInfo) (*User, error)
 	ForgotPassword(ctx context.Context, email string) (bool, error)
 	RegisterUser(ctx context.Context, email string, password string, info *UserInfo) (*User, error)
 	ConfirmInvitation(ctx context.Context, requestID string, password string, info *UserInfo) (*User, error)
@@ -166,7 +166,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.InviteUser(childComplexity, args["email"].(string)), true
+		return e.complexity.Mutation.InviteUser(childComplexity, args["email"].(string), args["userInfo"].(*UserInfo)), true
 
 	case "Mutation.registerUser":
 		if e.complexity.Mutation.RegisterUser == nil {
@@ -530,7 +530,7 @@ type Mutation {
   # create user if not exists and send user's ID
   # creates requestID for confirming invitation that can be used in method confirmInvitation
   # TODO: this endpoint should be secured some way so it's not possible to fetch user info by email
-  inviteUser(email: String!): User!
+  inviteUser(email: String!, userInfo: UserInfo): User!
   # creates requestID for resetting password that can be used in method resetPassword
   forgotPassword(email: String!): Boolean!
   # creates requestID activating user that can be used in method activateUser
@@ -632,6 +632,14 @@ func (ec *executionContext) field_Mutation_inviteUser_args(ctx context.Context, 
 		}
 	}
 	args["email"] = arg0
+	var arg1 *UserInfo
+	if tmp, ok := rawArgs["userInfo"]; ok {
+		arg1, err = ec.unmarshalOUserInfo2ᚖgithubᚗcomᚋgraphqlᚑservicesᚋidᚐUserInfo(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userInfo"] = arg1
 	return args, nil
 }
 
@@ -827,7 +835,7 @@ func (ec *executionContext) _Mutation_inviteUser(ctx context.Context, field grap
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().InviteUser(rctx, args["email"].(string))
+		return ec.resolvers.Mutation().InviteUser(rctx, args["email"].(string), args["userInfo"].(*UserInfo))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

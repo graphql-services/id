@@ -72,7 +72,7 @@ type Mutation {
   # create user if not exists and send user's ID
   # creates requestID for confirming invitation that can be used in method confirmInvitation
   # TODO: this endpoint should be secured some way so it's not possible to fetch user info by email
-  inviteUser(email: String!): User!
+  inviteUser(email: String!, userInfo: UserInfo): User!
   # creates requestID for resetting password that can be used in method resetPassword
   forgotPassword(email: String!): Boolean!
   # creates requestID activating user that can be used in method activateUser

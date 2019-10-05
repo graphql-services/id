@@ -11,7 +11,7 @@ type UserStore struct {
 	DB *database.DB
 }
 
-func (s *UserStore) InviteUser(ctx context.Context, email string) (u *User, new bool, err error) {
+func (s *UserStore) InviteUser(ctx context.Context, email string, userInfo *UserInfo) (u *User, new bool, err error) {
 	u = &User{}
 	// TODO: search user by account emails, not just primary user email
 	res := s.DB.Client().First(u, "email = ?", email)
@@ -24,6 +24,9 @@ func (s *UserStore) InviteUser(ctx context.Context, email string) (u *User, new 
 		u = &User{
 			ID:    uuid.Must(uuid.NewV4()).String(),
 			Email: email,
+		}
+		if userInfo != nil {
+			userInfo.UpdateUser(u)
 		}
 		new = true
 		err = s.DB.Client().Save(u).Error

@@ -23,14 +23,14 @@ func (r *Resolver) Query() QueryResolver {
 
 type mutationResolver struct{ *Resolver }
 
-func (r *mutationResolver) InviteUser(ctx context.Context, email string) (u *User, err error) {
+func (r *mutationResolver) InviteUser(ctx context.Context, email string, userInfo *UserInfo) (u *User, err error) {
 	err = checkmail.ValidateFormat(email)
 	if err != nil {
 		err = fmt.Errorf("invalid email format")
 		return
 	}
 
-	u, isnew, err := r.UserStore.InviteUser(ctx, email)
+	u, isnew, err := r.UserStore.InviteUser(ctx, email, userInfo)
 	if err != nil {
 		return
 	}

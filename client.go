@@ -23,8 +23,8 @@ func (c *Client) run(ctx context.Context, req *graphql.Request, data interface{}
 
 const (
 	inviteUserQuery = `
-mutation($email: String!) {
-	result: inviteUser(email: $email) {
+mutation($email: String!, $info: UserInfo) {
+	result: inviteUser(email: $email, userInfo: $info) {
 		id
 		email
 		given_name
@@ -62,11 +62,12 @@ type UserProviderInviteResponse struct {
 }
 
 // InviteUser invite user with given Email. If user with given email exists, it just return without any invitation.
-func (c *Client) InviteUser(ctx context.Context, email string) (user IDUser, err error) {
+func (c *Client) InviteUser(ctx context.Context, email string, info *UserInfo) (user IDUser, err error) {
 	var res UserProviderInviteResponse
 
 	req := graphql.NewRequest(inviteUserQuery)
 	req.Var("email", email)
+	req.Var("userInfo", info)
 	err = c.run(ctx, req, &res)
 
 	user = res.Result
