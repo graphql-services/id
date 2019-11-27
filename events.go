@@ -45,7 +45,7 @@ func (c *EventController) send(ctx context.Context, e cloudevents.Event) error {
 	if c.client == nil {
 		return nil
 	}
-	_, err := (*c.client).Send(ctx, e)
+	_, _, err := (*c.client).Send(ctx, e)
 	return err
 }
 
